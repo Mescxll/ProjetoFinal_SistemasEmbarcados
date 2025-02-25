@@ -9,9 +9,6 @@
 #include "inc/ssd1306.h"
 #include "inc/font.h"
 
-#define LED_V 13 //LED vermelho
-#define LED_A 12 //LED azul
-#define LED_VD 11 //LED verde
 #define JOYSTICK_X 27 //Joystick eixo X
 #define JOYSTICK_Y 26 //Joystick eixo Y
 #define BOTAO_JOY 22 //Botão do Joystick
@@ -50,18 +47,6 @@ void inicializar(){
     adc_gpio_init(JOYSTICK_Y);
     adc_select_input(0);
 
-    //Inicializa o LED vermelho e define como saída
-    gpio_init(LED_V);
-    gpio_set_dir(LED_V, GPIO_OUT);
-
-    //Inicializa o LED azul e define como saída
-    gpio_init(LED_A);
-    gpio_set_dir(LED_A, GPIO_OUT);
-
-    //Inicializa o LED verde e define como saída
-    gpio_init(LED_VD);
-    gpio_set_dir(LED_VD, GPIO_OUT);
-
     //Inicializa o Botão A, define como entrada e põe em nível alto enquanto não pressionado
     gpio_init(BOTAO_A);
     gpio_set_dir(BOTAO_A, GPIO_IN);
@@ -99,33 +84,44 @@ int main(){
     //Váriavel para indicar o ativamento de um pixel
     bool cor = true;
 
-    //Loop Infinito
-    while (true) {
-        //Lê os valores dos eixos X e Y
-        uint16_t x_valor = leitura_joystick(0);
-        uint16_t y_valor = leitura_joystick(1);
+  // Loop Infinito
+while (true) {
+    // Lê os valores dos eixos X e Y
+    uint16_t y_valor = leitura_joystick(0);
+    uint16_t x_valor = leitura_joystick(1);
 
-        ssd1306_fill(&display, false); 
-        ssd1306_rect(&display, 0, 0, 128, 64, true, false); 
-        ssd1306_send_data(&display);
-        //Configura a posição do quadrado
-        uint8_t x_pos = x_valor * 57 / 4096;
-        uint8_t y_pos = y_valor * 121 / 4096;
-        int16_t x_iluminacao = abs(x_valor - 1893) * 16 / 1893;
-        int16_t y_iluminacao = abs(y_valor - 2099) * 16 / 2099;
+    //int16_t x_iluminacao = abs(x_valor - 1893) * 16 / 1893;
+    //int16_t y_iluminacao = abs(y_valor - 2099) * 16 / 2099;
 
+    // Limpa a tela e desenha a borda
+    ssd1306_fill(&display, false); 
+    ssd1306_rect(&display, 0, 0, 128, 64, true, false); 
 
-        if(x_iluminacao>=2068){
-            ssd1306_draw_string(&display, "Vibracao detectada", 10, 30);
-        }else if(x_iluminacao<=2028){
-            ssd1306_draw_string(&display, "Vibracao detectada", 10, 30);
-        }else if(x_iluminacao>2028&&x_iluminacao<2068){
-            ssd1306_draw_string(&display, "Sem vibracoes", 10, 30);          
-        }
-        ssd1306_send_data(&display);
+   //Configura a posição do quadrado
+   //uint8_t x_pos = x_valor * 57 / 4096;
+   //uint8_t y_pos = y_valor * 121 / 4096;
+   
 
-        sleep_ms(100); //Delay
+    // Define a faixa central sem vibração (por exemplo, ±200 de margem)
+    int16_t margem = 500;
+    
+    if (x_valor < (2048 - margem) || x_valor > (2048 + margem)) {
+        ssd1306_draw_string(&display, "Vibracoes", 10, 40);
+    } else {
+        ssd1306_draw_string(&display, "Sem vibracoes", 10, 40);
     }
+    if (y_valor < (2048 - margem) || y_valor > (2048 + margem)) {
+        ssd1306_draw_string(&display, "Solo fofo", 10, 15);
+    } else {
+        ssd1306_draw_string(&display, "Solo compacto", 10, 15);
+    }
+
+    // Envia os dados para o display apenas uma vez no final
+    ssd1306_send_data(&display);
+
+    sleep_ms(100); // Delay
+}
+
     return 0;
 }
 
@@ -139,12 +135,10 @@ void gpio_irq_handler(uint botao, uint32_t eventos){
         if (botao == BOTAO_A) { //Caso botão A
             estado_leds = !estado_leds; //Muda a váriavel de estado dos LEDs
             if (!estado_leds) { //Desliga os LEDs
-                pwm_set_gpio_level(LED_V, 0);
-                pwm_set_gpio_level(LED_A, 0);
-                gpio_put(LED_VD, 0);
+               
             }
         } else if (botao == BOTAO_JOY) { //Caso botão do joystick
-            gpio_put(LED_VD, !gpio_get(LED_VD)); //Muda o estado do LED verde
+           
         }
         ultimo_tempo = tempo_real; //Atualiza o tempo
     }
