@@ -13,6 +13,8 @@
 #define JOYSTICK_Y 26 //Joystick eixo Y
 #define BOTAO_JOY 22 //Botão do Joystick
 #define BOTAO_A 5 //Botão A
+#define BOTAO_B 6 //Botão B
+
 
 #define I2C_PORT i2c1 //Porta do I2C
 #define I2C_SDA 14 //Display SDA
@@ -23,6 +25,7 @@
 static volatile uint32_t ultimo_tempo = 0; //Armazena o último tempo absoluto 
 static volatile bool estado_leds = 0; //Indica o estado dos LEDs
 int level_atual = 0; // Mantém o nível atual dos LEDs
+int valor = 0;
 
 //Protótipo da função callback
 static void gpio_irq_handler(uint gpio, uint32_t events);
@@ -48,6 +51,11 @@ void inicializar(){
     gpio_set_dir(BOTAO_A, GPIO_IN);
     gpio_pull_up(BOTAO_A);
     
+    //Inicializa o Botão B, define como entrada e põe em nível alto enquanto não pressionado
+    gpio_init(BOTAO_B);
+    gpio_set_dir(BOTAO_B, GPIO_IN);
+    gpio_pull_up(BOTAO_B);
+
     //Inicializa o Botão do Joystick, define como entrada e põe em nível alto enquanto não pressionado
     gpio_init(BOTAO_JOY);
     gpio_set_dir(BOTAO_JOY, GPIO_IN);
@@ -131,35 +139,47 @@ void gpio_irq_handler(uint botao, uint32_t eventos) {
     if (tempo_real - ultimo_tempo > 200000) {
         if (botao == BOTAO_A) { // Botão A pressionado
             estado_leds = !estado_leds; // Alterna o estado
-
             if (estado_leds) { // Estado ativo
                 if (level_atual == 0) {
-                    pwm_set_gpio_level(LED_VD, 4000);
-                    level_atual = 4000;
-                } else if (level_atual == 4000) {
-                    pwm_set_gpio_level(LED_VD, 2400);
-                    level_atual = 2400;
-                } else if (level_atual == 2400) {
-                    pwm_set_gpio_level(LED_VD, 400);
-                    level_atual = 400;
-                } else if (level_atual == 400) {
-                    pwm_set_gpio_level(LED_VD, 0);
-                    pwm_set_gpio_level(LED_VM, 400);
-                    level_atual = 400;
-                } else if (level_atual == 400 && gpio_get(LED_VM) == 1) { // LED_VM em 400
-                    pwm_set_gpio_level(LED_VM, 2400);
-                    level_atual = 2400;
-                } else if (level_atual == 2400) { // LED_VM em 2400
-                    pwm_set_gpio_level(LED_VM, 4000 && gpio_get(LED_VM) == 1);
-                    level_atual = 4000;
-                } else if (level_atual == 4000 && gpio_get(LED_VM) == 1) { // LED_VM em 4000, volta para LED_VD
-                    pwm_set_gpio_level(LED_VM, 0);
-                    pwm_set_gpio_level(LED_VD, 4000);
-                    level_atual = 4000;
-                }
+                    pwm_set_gpio_level(LED_VD, valores_VD[nivel]);
+                    pwm_set_gpio_level(LED_VM, valores_VM[nivel]);
+                    level_atual = 1;
+                    nivel--;
+                } else if (level_atual == 1) {
+                    pwm_set_gpio_level(LED_VD, valores_VD[nivel]);
+                    pwm_set_gpio_level(LED_VM, valores_VM[nivel]);
+                    level_atual = 2;
+                    nivel--;
+                } else if (level_atual == 2) {
+                    pwm_set_gpio_level(LED_VD, valores_VD[nivel]);
+                    pwm_set_gpio_level(LED_VM, valores_VM[nivel]);
+                    level_atual = 3;
+                    nivel--;
+                } else if (level_atual == 3) {
+                    pwm_set_gpio_level(LED_VD, valores_VD[nivel]);                    
+                    pwm_set_gpio_level(LED_VM, valores_VM[nivel]);
+                    level_atual = 4;
+                    nivel--;
+                } else if (level_atual == 4) { // LED_VM em 400
+                    pwm_set_gpio_level(LED_VM, valores_VM[nivel]);
+                    pwm_set_gpio_level(LED_VD, valores_VD[nivel]);
+                    level_atual = 5;
+                    nivel--;
+                } else if (level_atual == 5) { // LED_VM em 2400
+                    pwm_set_gpio_level(LED_VM, valores_VM[nivel]);
+                    pwm_set_gpio_level(LED_VD, valores_VD[nivel]);
+                    level_atual = 6;
+                } else if (level_atual == 6) { // LED_VM em 4000, volta para LED_VD
+                    nivel = 5;
+                    pwm_set_gpio_level(LED_VM, valores_VM[nivel]);
+                    pwm_set_gpio_level(LED_VD, valores_VD[nivel]);
+                    level_atual = 1;                  
+                }               
             }
         } else if (botao == BOTAO_JOY) { 
             // Lógica para botão do joystick (se necessário)
+        } else if (botao == BOTAO_B) { 
+            // Lógica para botão B (se necessário)
         }
 
         // Atualiza o tempo do último acionamento

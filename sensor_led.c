@@ -20,15 +20,17 @@ void pwm_setup(uint LED) {
     pwm_set_enabled(slice, true);
 }
 
-// Níveis de intensidade dos LEDs
-int valores[] = {4000, 2800, 1200, 1200, 2800, 4000};
-int led[] = {11, 13};
-// Crítico (vermelho 100%)
-// Perigo (vermelho 70%)
-// Perigo Potencial (vermelho 30%)
-// Alerta (verde 30%)
-// Oscilando (verde 70%)
-// Ideal (verde 100%)
+// Definição dos níveis
+int valores_VM[] = {4000, 2400, 400, 0, 0, 0};  // Intensidade do LED vermelho
+int valores_VD[] = {0, 0, 0, 400, 2400, 4000};  // Intensidade do LED verde
+int nivel = 5; 
+
+// 6 Crítico (vermelho 100%)
+// 5 Perigo (vermelho 70%)
+// 4 Perigo Potencial (vermelho 30%)
+// 3 Alerta (verde 30%)
+// 2 Oscilando (verde 70%)
+// 1 Ideal (verde 100%)
 
 void inicializar_leds() {
     gpio_init(LED_VM);
