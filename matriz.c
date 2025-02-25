@@ -14,13 +14,6 @@ static uint offset;
 //Variáveis que definem a cor usada e sua intensidade -> 1 = 100%
 double r = 0.0, g = 1.0, b = 0.0;
 
-//Matrizes dos números
-double figura[25] = {       0.0, 0.1, 0.0, 0.1, 0.0,
-                            0.1, 0.0, 0.1, 0.0, 0.1,
-                            0.1, 0.0, 0.0, 0.0, 0.1,
-                            0.0, 0.1, 0.0, 0.1, 0.0,
-                            0.0, 0.0, 0.1, 0.0, 0.0
-};
 
 //Função para configurar o PIO
 void configurar_pio() {

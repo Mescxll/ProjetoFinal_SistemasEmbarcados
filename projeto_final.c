@@ -8,13 +8,14 @@
 #include "hardware/i2c.h"
 #include "inc/ssd1306.h"
 #include "inc/font.h"
+#include "matrizes.c"
 
 #define JOYSTICK_X 27 //Joystick eixo X
 #define JOYSTICK_Y 26 //Joystick eixo Y
 #define BOTAO_JOY 22 //Botão do Joystick
 #define BOTAO_A 5 //Botão A
 #define BOTAO_B 6 //Botão B
-
+#define BUZZER_A 21
 
 #define I2C_PORT i2c1 //Porta do I2C
 #define I2C_SDA 14 //Display SDA
@@ -36,6 +37,31 @@ uint16_t leitura_joystick(uint adc){
     return adc_read();
 }
 
+// Função para ativar o buzzer com uma frequência específica
+void ativar_buzzer(uint pino, uint16_t frequency) {
+    uint slice = pwm_gpio_to_slice_num(pino);
+    uint16_t level = WRAP_PERIOD / 2; // Definindo um duty cycle de 50%
+    
+    // Configurar a frequência do PWM
+    pwm_set_clkdiv(slice, PWM_DIVISER);
+    pwm_set_wrap(slice, WRAP_PERIOD);
+    
+    // Definindo o nível do PWM
+    pwm_set_gpio_level(pino, level);
+    
+    // Ativar o PWM
+    pwm_set_enabled(slice, true);
+    
+    // Atraso para manter o som por um tempo (ajustável)
+    sleep_ms(500);
+    
+    // Desativar o PWM
+    pwm_set_gpio_level(pino, 0);
+}
+
+void parar_buzzer() {
+    gpio_put(BUZZER_A, 0);
+}
 
 void inicializar(){
     stdio_init_all();
@@ -50,6 +76,11 @@ void inicializar(){
     gpio_init(BOTAO_A);
     gpio_set_dir(BOTAO_A, GPIO_IN);
     gpio_pull_up(BOTAO_A);
+
+    //Inicializa o Buzzer
+    gpio_init(BUZZER_A);
+    gpio_set_dir(BUZZER_A, GPIO_OUT);
+    pwm_setup(BUZZER_A);
     
     //Inicializa o Botão B, define como entrada e põe em nível alto enquanto não pressionado
     gpio_init(BOTAO_B);
@@ -113,16 +144,51 @@ int main(){
         int16_t margem = 500;
         
         if (x_valor < (2048 - margem) || x_valor > (2048 + margem)) {
-            ssd1306_draw_string(&display, "Vibracoes", 10, 40);
+            ssd1306_draw_string(&display, "Vibracoes", 10, 48);
         } else {
-            ssd1306_draw_string(&display, "Sem vibracoes", 10, 40);
+            ssd1306_draw_string(&display, "Sem vibracoes", 10, 48);
         }
         if (y_valor < (2048 - margem) || y_valor > (2048 + margem)) {
-            ssd1306_draw_string(&display, "Solo fofo", 10, 15);
+            ssd1306_draw_string(&display, "Solo fofo", 10, 30);
         } else {
-            ssd1306_draw_string(&display, "Solo compacto", 10, 15);
+            ssd1306_draw_string(&display, "Solo compacto", 10, 30);
         }
 
+        switch (level_atual) {
+            case 0:
+                ssd1306_draw_string(&display, "Pressione A   para ver clima", 15, 5);
+                break;
+            case 1:
+                // Ideal (Verde 100%)
+                parar_buzzer();
+                ssd1306_draw_string(&display, "Temperatura        Ideal", 15, 5);
+                break;
+            case 2:
+                // Oscilando (Verde 70%)
+                ssd1306_draw_string(&display, "Temperatura      Oscilando", 15, 5);
+                break;
+            case 3:
+                // Alerta (Verde 30%)
+                ssd1306_draw_string(&display, "Temperatura        Caindo", 15, 5);
+                break;
+            case 4:
+                // Perigo Potencial (Vermelho 30%)
+                ssd1306_draw_string(&display, "Temperatura      Potencial",15, 5);
+                break;
+            case 5:
+                // Perigo (Vermelho 70%)
+                ssd1306_draw_string(&display, "Temperatura         Alta", 15, 5);
+                break;
+            case 6:
+                ssd1306_draw_string(&display, "Temperatura       Critica", 15, 5);              
+                ativar_buzzer(BUZZER_A, 2000); // Ativa o buzzer com frequência de 1000 Hz (1 kHz)
+                break;
+            default:
+                // Caso nenhum nível seja válido
+                ssd1306_draw_string(&display, "Temperatura     Desconhecida", 15, 5);
+                break;
+        }
+        
         // Envia os dados para o display apenas uma vez no final
         ssd1306_send_data(&display);
 
@@ -181,7 +247,6 @@ void gpio_irq_handler(uint botao, uint32_t eventos) {
         } else if (botao == BOTAO_B) { 
             // Lógica para botão B (se necessário)
         }
-
         // Atualiza o tempo do último acionamento
         ultimo_tempo = tempo_real;
     }

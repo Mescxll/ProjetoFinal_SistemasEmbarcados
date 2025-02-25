@@ -11,12 +11,12 @@ const float PWM_DIVISER = 4.0;
 uint16_t led_level = 200; 
 
 // Função para configurar o módulo PWM
-void pwm_setup(uint LED) {
-    gpio_set_function(LED, GPIO_FUNC_PWM);
-    uint slice = pwm_gpio_to_slice_num(LED);
+void pwm_setup(uint pino) {
+    gpio_set_function(pino, GPIO_FUNC_PWM);
+    uint slice = pwm_gpio_to_slice_num(pino);
     pwm_set_clkdiv(slice, PWM_DIVISER);
     pwm_set_wrap(slice, WRAP_PERIOD);
-    pwm_set_gpio_level(LED, 0);
+    pwm_set_gpio_level(pino, 0);
     pwm_set_enabled(slice, true);
 }
 
