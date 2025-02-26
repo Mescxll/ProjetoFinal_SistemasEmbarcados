@@ -12,7 +12,7 @@ static uint sm;
 static uint offset;
 
 //Variáveis que definem a cor usada e sua intensidade -> 1 = 100%
-double r = 0.0, g = 1.0, b = 0.0;
+double r = 0.0, g = 0.0, b = 1.0;
 
 
 //Função para configurar o PIO
@@ -35,15 +35,15 @@ uint32_t definirLeds(double intVermelho, double intVerde, double intAzul){
   
 //Função para fazer com que a matriz seja ativada, em uma cor especificada
 void ligarMatriz(double r, double g, double b, double *desenho){
-uint32_t valorLed;
-for (int16_t i = 0; i < LEDS; i++) { 
-    if(r != 0.0){
-        valorLed = definirLeds(desenho[24-i], g, b);           
-    }else if(g != 0.0){
-        valorLed = definirLeds(r, desenho[24-i], b);    
-    }else if(b != 0.0){
-        valorLed = definirLeds(r, g, desenho[24-i]);           
+    uint32_t valorLed;
+    for (int16_t i = 0; i < LEDS; i++) { 
+        if(r != 0.0){
+            valorLed = definirLeds(desenho[24-i], g, b);           
+        }else if(g != 0.0){
+            valorLed = definirLeds(r, desenho[24-i], b);    
+        }else if(b != 0.0){
+            valorLed = definirLeds(r, g, desenho[24-i]);           
+        }
+        pio_sm_put_blocking(pio, sm, valorLed);
     }
-    pio_sm_put_blocking(pio, sm, valorLed);
-}
 }

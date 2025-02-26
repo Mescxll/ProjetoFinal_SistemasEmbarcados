@@ -23,6 +23,9 @@
 
 #define endereco 0x3C 
 
+static volatile uint numero = -1;
+volatile int acionarMatriz = 0;
+static volatile uint a = 1;
 static volatile uint32_t ultimo_tempo = 0; //Armazena o último tempo absoluto 
 static volatile bool estado_leds = 0; //Indica o estado dos LEDs
 int level_atual = 0; // Mantém o nível atual dos LEDs
@@ -95,6 +98,7 @@ void inicializar(){
     //Chama a função de callback
     gpio_set_irq_enabled_with_callback(BOTAO_JOY, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
     gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
+    gpio_set_irq_enabled_with_callback(BOTAO_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
     //Inicializa o I2C na porta i2c1 em 400Hz
     i2c_init(I2C_PORT, 400 * 1000);
@@ -104,7 +108,10 @@ void inicializar(){
 int main(){
     inicializar();
     inicializar_leds();
+    configurar_pio();
     //Configura o I2C
+    ligarMatriz(r, g, b, figura_zeros);
+    
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
     gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(I2C_SDA);
@@ -122,9 +129,8 @@ int main(){
     pwm_setup(LED_VD);
     uint up_down = 1; //variável para controlar se o nível do LED aumenta ou diminui
 
-
     // Loop Infinito
-    while (true) {
+    while (true) {       
         // Lê os valores dos eixos X e Y
         uint16_t y_valor = leitura_joystick(0);
         uint16_t x_valor = leitura_joystick(1);
@@ -143,56 +149,85 @@ int main(){
         // Define a faixa central sem vibração (por exemplo, ±200 de margem)
         int16_t margem = 500;
         
+       
+
         if (x_valor < (2048 - margem) || x_valor > (2048 + margem)) {
-            ssd1306_draw_string(&display, "Vibracoes", 10, 48);
+            ssd1306_draw_string(&display, "Vibracoes", 10, 20);
         } else {
-            ssd1306_draw_string(&display, "Sem vibracoes", 10, 48);
+            ssd1306_draw_string(&display, "Sem vibracoes", 10, 20);
         }
         if (y_valor < (2048 - margem) || y_valor > (2048 + margem)) {
-            ssd1306_draw_string(&display, "Solo fofo", 10, 30);
+            ssd1306_draw_string(&display, "Solo fofo", 10, 32);
         } else {
-            ssd1306_draw_string(&display, "Solo compacto", 10, 30);
+            ssd1306_draw_string(&display, "Solo compacto", 10, 32);
         }
-
+        
+        switch (numero) {
+            case 0:
+                // Ideal (Verde 100%)
+                parar_buzzer();
+                ssd1306_draw_string(&display, "Umidade         Ideal", 25, 45);
+                break;
+            case 1:
+                // Oscilando (Verde 70%)
+                ssd1306_draw_string(&display, "Umidade       Oscilando", 25, 45);
+                break;          
+            case 2:
+                // Perigo Potencial (Vermelho 30%)
+                ssd1306_draw_string(&display, "Umidade       Potencial",25, 45);
+                break;
+            case 3:
+                // Perigo (Vermelho 70%)
+                ssd1306_draw_string(&display, "Umidade         Alta", 25, 45);
+                break;
+            case 4:
+                ssd1306_draw_string(&display, "Umidade        Critica", 25, 45);              
+                ativar_buzzer(BUZZER_A, 2000); // Ativa o buzzer com frequência de 1000 Hz (1 kHz)
+                break;
+            default:
+                ssd1306_draw_string(&display, "Pressione B     para umidade", 15, 45);
+                break;
+        }
+        
         switch (level_atual) {
             case 0:
-                ssd1306_draw_string(&display, "Pressione A   para ver clima", 15, 5);
+                ssd1306_draw_string(&display, "Pressione A      para clima", 15, 1);
                 break;
             case 1:
                 // Ideal (Verde 100%)
                 parar_buzzer();
-                ssd1306_draw_string(&display, "Temperatura        Ideal", 15, 5);
+                ssd1306_draw_string(&display, "Temperatura        Ideal", 15, 1);
                 break;
             case 2:
                 // Oscilando (Verde 70%)
-                ssd1306_draw_string(&display, "Temperatura      Oscilando", 15, 5);
+                ssd1306_draw_string(&display, "Temperatura      Oscilando", 15, 1);
                 break;
             case 3:
                 // Alerta (Verde 30%)
-                ssd1306_draw_string(&display, "Temperatura        Caindo", 15, 5);
+                ssd1306_draw_string(&display, "Temperatura        Caindo", 15, 1);
                 break;
             case 4:
                 // Perigo Potencial (Vermelho 30%)
-                ssd1306_draw_string(&display, "Temperatura      Potencial",15, 5);
+                ssd1306_draw_string(&display, "Temperatura      Potencial",15, 1);
                 break;
             case 5:
                 // Perigo (Vermelho 70%)
-                ssd1306_draw_string(&display, "Temperatura         Alta", 15, 5);
+                ssd1306_draw_string(&display, "Temperatura         Alta", 15, 1);
                 break;
             case 6:
-                ssd1306_draw_string(&display, "Temperatura       Critica", 15, 5);              
+                ssd1306_draw_string(&display, "Temperatura       Critica", 15, 1);              
                 ativar_buzzer(BUZZER_A, 2000); // Ativa o buzzer com frequência de 1000 Hz (1 kHz)
                 break;
             default:
                 // Caso nenhum nível seja válido
-                ssd1306_draw_string(&display, "Temperatura     Desconhecida", 15, 5);
+                ssd1306_draw_string(&display, "Temperatura     Desconhecida", 15, 1);
                 break;
         }
         
         // Envia os dados para o display apenas uma vez no final
         ssd1306_send_data(&display);
 
-        sleep_ms(100); // Delay
+        sleep_ms(50); // Delay
     }
     return 0;
 }
@@ -200,7 +235,7 @@ int main(){
 //Função de Callback
 void gpio_irq_handler(uint botao, uint32_t eventos) {
     uint32_t tempo_real = to_us_since_boot(get_absolute_time());
-
+    
     // Debounce: Verifica se passaram pelo menos 200ms desde o último acionamento
     if (tempo_real - ultimo_tempo > 200000) {
         if (botao == BOTAO_A) { // Botão A pressionado
@@ -242,12 +277,17 @@ void gpio_irq_handler(uint botao, uint32_t eventos) {
                     level_atual = 1;                  
                 }               
             }
-        } else if (botao == BOTAO_JOY) { 
+        } 
+        if (botao == BOTAO_JOY) { 
             // Lógica para botão do joystick (se necessário)
-        } else if (botao == BOTAO_B) { 
-            // Lógica para botão B (se necessário)
+        } 
+        if (botao == BOTAO_B) { 
+            numero = (numero + 1) % 5;
+            ligarMatriz(r, g, b, figuras[numero]);           
+            a++;
         }
         // Atualiza o tempo do último acionamento
         ultimo_tempo = tempo_real;
-    }
+       
+    }   
 }
