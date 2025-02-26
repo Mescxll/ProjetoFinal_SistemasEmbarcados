@@ -129,7 +129,7 @@ void ligarMatriz(double r, double g, double b, double *desenho){
 
 void reiniciar_display(){
     ssd1306_fill(&display, false); //Limpa o Display
-    ssd1306_send_data(&display);    //Envia os dados para o Display 
+    ssd1306_rect(&display, 0, 0, 128, 64, true, false); //Desenha Borda 
 }
 
 //Função para ativar o Buzzer com uma frequência específica
@@ -215,6 +215,7 @@ int main(){
     ssd1306_config(&display); 
     reiniciar_display();
 
+
     //Chama a função de callback para os Botões A e B
     gpio_set_irq_enabled_with_callback(BOTAO_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
     gpio_set_irq_enabled_with_callback(BOTAO_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
@@ -228,7 +229,7 @@ int main(){
         reiniciar_display();
        
         // Define a faixa central do JoyStick
-        int16_t margem = 500;
+        int16_t margem = 600;
         
         //Define um intervalo onde o centro do eixo X indica âusencia de Vibrações no solo e as suas extremidades indicam presença de Vibrações
         if (x_valor < (2048 - margem) || x_valor > (2048 + margem)) {
