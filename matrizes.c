@@ -1,5 +1,4 @@
-
-//Matriz zerada e Matrizes das colunas completas
+//Matriz zerada e Matrizes representativas da umidade
 double figura_zeros[25] = { 
     0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0,
@@ -8,6 +7,7 @@ double figura_zeros[25] = {
     0.0, 0.0, 0.0, 0.0, 0.0
 };
 
+//Ideal
 double figura_1[25] = {  
     0.0, 0.0, 0.0, 0.0, 0.0,  
     0.0, 0.0, 0.0, 0.0, 0.0,  
@@ -16,6 +16,7 @@ double figura_1[25] = {
     0.1, 0.0, 0.0, 0.0, 0.0  
 };
 
+//Oscilando
 double figura_2[25] = {  
     0.0, 0.0, 0.0, 0.0, 0.0,  
     0.0, 0.0, 0.0, 0.0, 0.0,  
@@ -24,6 +25,7 @@ double figura_2[25] = {
     0.1, 0.1, 0.0, 0.0, 0.0  
 };
 
+//Potencial
 double figura_3[25] = {  
     0.0, 0.0, 0.0, 0.0, 0.0,  
     0.0, 0.0, 0.0, 0.0, 0.0,  
@@ -32,6 +34,7 @@ double figura_3[25] = {
     0.1, 0.1, 0.1, 0.0, 0.0  
 };
 
+//Alta
 double figura_4[25] = {  
     0.0, 0.0, 0.0, 0.0, 0.0,  
     0.0, 0.1, 0.0, 0.0, 0.0,  
@@ -40,6 +43,7 @@ double figura_4[25] = {
     0.1, 0.1, 0.1, 0.1, 0.0  
 };
 
+//Crítica
 double figura_5[25] = {  
     0.0, 0.0, 0.0, 0.0, 0.1,  
     0.1, 0.1, 0.0, 0.0, 0.0,  
@@ -48,6 +52,7 @@ double figura_5[25] = {
     0.1, 0.1, 0.1, 0.1, 0.1  
 };
 
+//Vetor de Matrizes
 double *figuras[5] = {  
     figura_1,  
     figura_2,  
