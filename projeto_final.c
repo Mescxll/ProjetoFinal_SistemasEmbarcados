@@ -238,7 +238,7 @@ int main(){
             ssd1306_draw_string(&display, "Sem vibracoes", 10, 20);
         }
 
-        //Define um intervalo onde o centro do eixo Y indica que o solo está Compacto e as suas extremidades indicam pouca Compactividade
+        //Define um intervalo onde o centro do eixo Y indica que o solo está Compacto e as suas extremidades indicam pouca Compactação
         if (y_valor < (2048 - margem) || y_valor > (2048 + margem)) {
             ssd1306_draw_string(&display, "Solo fofo", 10, 32);
         } else {
