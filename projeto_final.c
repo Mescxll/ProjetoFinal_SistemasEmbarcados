@@ -79,7 +79,7 @@ int nivel = 5;
 //Funções --------------------------------------------------------------------------------------------------------------------
 
 //Função para configurar o módulo PWM
-void pwm_setup(uint pino) {
+void configurar_pwm(uint pino) {
     gpio_set_function(pino, GPIO_FUNC_PWM);
     uint slice = pwm_gpio_to_slice_num(pino);
     pwm_set_clkdiv(slice, PWM_DIVISER);
@@ -133,7 +133,7 @@ void reiniciar_display(){
 }
 
 //Função para ativar o Buzzer com uma frequência específica
-void ativar_buzzer(uint pino, uint16_t frequency) {
+void ativar_buzzer(uint pino, uint16_t frequencia) {
     reiniciar_display();
     //Emite mensagem de Alerta
     ssd1306_draw_string(&display, "Alerta", 28, 15); 
@@ -172,8 +172,8 @@ void inicializar(){
     gpio_set_dir(LED_VM, GPIO_OUT);
     gpio_init(LED_VD);
     gpio_set_dir(LED_VD, GPIO_OUT);
-    pwm_setup(LED_VM);
-    pwm_setup(LED_VD);
+    configurar_pwm(LED_VM);
+    configurar_pwm(LED_VD);
 
     //Inicializa o Botão A, define como entrada e põe em nível alto enquanto não pressionado
     gpio_init(BOTAO_A);
@@ -188,7 +188,7 @@ void inicializar(){
     //Inicializa o Buzzer e configura como PWM
     gpio_init(BUZZER_A);
     gpio_set_dir(BUZZER_A, GPIO_OUT);
-    pwm_setup(BUZZER_A);
+    configurar_pwm(BUZZER_A);
 
     //Inicializa o I2C na porta i2c1 em 400Hz
     i2c_init(I2C_PORT, 400 * 1000);

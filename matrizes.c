@@ -1,4 +1,4 @@
-//Matriz zerada e Matrizes representativas da umidade
+//Matriz zerada e Matrizes representativas de umidade
 double figura_zeros[25] = { 
     0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0,
